@@ -3,6 +3,10 @@ services:
     build: .
     container_name: sbir-crewai
     volumes:
-      - .:/app  # Mounts your local dir to /app in the container
+      - .:/app
     stdin_open: true
     tty: true
+    env_file:
+      - .env  # Or .env.local
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}

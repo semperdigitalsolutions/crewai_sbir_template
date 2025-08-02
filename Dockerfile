@@ -3,7 +3,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install CrewAI and tools extras with upgrade
-RUN pip install --no-cache-dir --upgrade crewai crewai[tools]
+RUN pip install --no-cache-dir --upgrade crewai crewai[tools] python-dotenv
 
 # Install OpenCode.ai (global in container)
 RUN curl -fsSL https://opencode.ai/install | bash

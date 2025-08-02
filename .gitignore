@@ -27,3 +27,7 @@ inputs/*.bak  # Backups if editing inputs
 # Other
 .idea/  # If using PyCharm/VS Code
 .vscode/
+
+# Env
+.env
+.env.local

@@ -1,12 +1,30 @@
 from crewai import Agent
+from crewai.llm import LLM
+import os  # For env var
+
 # from crewai_tools import SerperDevTool  # Commented for now; revisit later
 
-from opencode_llm import create_opencode_llm  # Updated import
+# Define LLMs using OpenRouter API (set OPENROUTER_API_KEY in .env)
+deepseek_v3_llm = LLM(
+    model="deepseek/deepseek-chat-v3-0324",  # Cheap reasoning for research/evaluation
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    custom_llm_provider="openrouter"
+)
 
-# Define LLMs as callables (using free OpenRouter models via OpenCode for testing)
-deepseek_v3_llm = create_opencode_llm('openrouter/deepseek/deepseek-chat-v3-0324:free')  # Good for creative/research tasks (235B params)
-qwen_coder_llm = create_opencode_llm('openrouter/qwen/qwen3-coder:free')  # Analytical/coding-focused (131B params)
-deepseek_r1_llm = create_opencode_llm('openrouter/deepseek/r1:free')  # Balanced for synthesis/ideation (37B params)
+kimi_k2_llm = LLM(
+    model="moonshotai/kimi-k2",  # For innovation, reasoning, code (paid upgrade)
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    custom_llm_provider="openrouter"
+)
+
+gemini_25_flash_llm = LLM(
+    model="google/gemini-2.5-flash",  # For synthesis, long context
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    custom_llm_provider="openrouter"
+)
 
 # Agent 1: Researcher
 researcher = Agent(
@@ -16,7 +34,7 @@ researcher = Agent(
         "You are an expert in SBIR research, skilled at analyzing solicitations and identifying key requirements. "
         "Use tools like web search for up-to-date info. Output a structured report with sections: Overview, Key Requirements, Prior Art, Feasibility Gaps."
     ),
-    llm=deepseek_v3_llm,  # Free model for research
+    llm=deepseek_v3_llm,  # Assigned: deepseek-chat-v3-0324 for cost-effective reasoning/tool use
     tools=[],  # Commented search_tool; revisit later
     verbose=True,
     allow_delegation=False  # No delegation for now
@@ -30,7 +48,7 @@ evaluator = Agent(
         "You are a rigorous evaluator with SBIR expertise. Score each criterion (accuracy, completeness, innovation, feasibility) "
         "and provide overall score. If overall <8, note revisions needed."
     ),
-    llm=qwen_coder_llm,  # Free model for analytical critiques
+    llm=deepseek_v3_llm,  # Assigned: deepseek-chat-v3-0324 for cost-effective reasoning/tool use
     verbose=True,
     allow_delegation=False
 )
@@ -43,7 +61,7 @@ ideator = Agent(
         "You are a creative innovator specializing in SBIR Phase 1 ideas. Generate 3-5 concepts, rank them by feasibility and novelty, "
         "and outline experiments. Ensure alignment with solicitation goals."
     ),
-    llm=deepseek_r1_llm,  # Free model for ideation
+    llm=kimi_k2_llm,  # Assigned: kimi-k2 for innovation/reasoning
     verbose=True,
     allow_delegation=False
 )
@@ -56,7 +74,7 @@ synthesizer = Agent(
         "You integrate diverse inputs, resolve conflicts, and produce a unified outline. "
         "Prioritize the best ideas and incorporate evaluator feedback."
     ),
-    llm=deepseek_v3_llm,  # Free model for synthesis
+    llm=gemini_25_flash_llm,  # Assigned: gemini-2.5-flash for reasoning/synthesis
     verbose=True,
     allow_delegation=False
 )
@@ -69,7 +87,7 @@ documenter = Agent(
         "You are a professional SBIR writer. Use templates for Phase 1 (e.g., 15-page limit). "
         "Output in Markdown format with sections: Abstract, Approach, Commercial Potential."
     ),
-    llm=qwen_coder_llm,  # Free model for structured drafting
+    llm=kimi_k2_llm,  # Assigned: kimi-k2 for innovation/reasoning
     verbose=True,
     allow_delegation=False
 )
