@@ -1,0 +1,1 @@
+Sample SBIR Topic: Develop AI-driven tools for climate monitoring. Requirements: Feasibility study on satellite data integration, budget under k, innovative ML approaches.

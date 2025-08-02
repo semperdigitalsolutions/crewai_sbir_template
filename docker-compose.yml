@@ -1,0 +1,8 @@
+services:
+  crewai-env:
+    build: .
+    container_name: sbir-crewai
+    volumes:
+      - .:/app  # Mounts your local dir to /app in the container
+    stdin_open: true
+    tty: true
