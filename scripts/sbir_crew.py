@@ -1,5 +1,6 @@
 from crewai import Crew, Process
 import re  # For simple score parsing
+import os  # For file path handling
 
 from agents import researcher, evaluator, ideator, synthesizer, documenter  # From agents.py
 from tasks import research_task, eval_research_task, ideation_task, eval_ideas_task, synthesis_task, doc_task, final_eval_task  # From tasks.py
@@ -36,8 +37,12 @@ def run_sbir_crew(sbir_input: str):
 #     print(final_result)
 
 if __name__ == "__main__":
-    topic = "Test SBIR Topic: AI for testing."  # Dummy input
-    print(f"Simulating crew kickoff with input: {topic}")
-    # final_result = run_sbir_crew(topic)  # Comment this out to avoid real run
-    # print(final_result)
-    print("Crew structure loaded successfully—no errors in agents/tasks.")
+    # Load the SBIR topic from the input file (for SBIR 12148)
+    input_file = os.path.join('inputs', 'topic.txt')
+    with open(input_file, 'r') as f:
+        topic = f.read().strip()
+    
+    print(f"Running crew with SBIR topic from file: {topic[:100]}...")  # Preview first 100 chars
+    
+    final_result = run_sbir_crew(topic)
+    print(final_result)
