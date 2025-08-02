@@ -1,43 +1,29 @@
 import subprocess
-from typing import Any, Dict, List, Optional
-from langchain_core.language_models.llms import BaseLLM
-from langchain_core.outputs import Generation, LLMResult
+from typing import Callable
 
-class OpenCodeLLM(BaseLLM):
-    """Custom LLM wrapper for OpenCode.ai CLI."""
+def create_opencode_llm(model: str) -> Callable[[str], str]:
+    def call(prompt: str) -> str:
+        cmd = ['opencode', 'run', prompt, '--model', model]
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            output = result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            raise ValueError(f"OpenCode error: {e.stderr}")
+        return output
+    return call
 
-    model: str  # e.g., 'claude-3.5-sonnet' or 'gpt-4o'
+# Multiple examples for future reference (commented out; uncomment to test):
+# claude_call = create_opencode_llm('claude-3.5-sonnet')  # For subscribed Claude via OpenCode
+# print(claude_call("Test prompt for Claude"))
 
-    def _generate(
-        self,
-        prompts: List[str],
-        stop: Optional[List[str]] = None,
-        run_manager: Optional[Any] = None,
-        **kwargs: Any,
-    ) -> LLMResult:
-        generations = []
-        for prompt in prompts:
-            # Run OpenCode CLI non-interactively
-            cmd = ['opencode', 'run', prompt, '--model', self.model]
-            if kwargs.get('json_output'):  # Optional for structured responses
-                cmd.append('--json')
-            try:
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                output = result.stdout.strip()
-            except subprocess.CalledProcessError as e:
-                raise ValueError(f"OpenCode error: {e.stderr}")
+# gpt_call = create_opencode_llm('gpt-4o')  # For subscribed GPT via OpenCode
+# print(gpt_call("Test prompt for GPT"))
 
-            # Format as LangChain expects
-            generations.append([Generation(text=output)])
-        return LLMResult(generations=generations)
+# gemini_call = create_opencode_llm('gemini-1.5-pro')  # For subscribed Gemini via OpenCode
+# print(gemini_call("Test prompt for Gemini"))
 
-    @property
-    def _llm_type(self) -> str:
-        return "opencode_custom"
+# free_deepseek_call = create_opencode_llm('openrouter/deepseek/deepseek-chat-v3-0324:free')  # Free OpenRouter model via OpenCode
+# print(free_deepseek_call("Test prompt for free DeepSeek"))
 
-    def _identifying_params(self) -> Dict[str, Any]:
-        return {"model": self.model}
-
-# Usage example (for later testing):
-# claude_llm = OpenCodeLLM(model='claude-3.5-sonnet')
-# response = claude_llm.invoke("Test prompt")
+# free_qwen_call = create_opencode_llm('openrouter/qwen/qwen3-coder:free')  # Another free OpenRouter model
+# print(free_qwen_call("Test prompt for free Qwen Coder"))

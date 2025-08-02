@@ -1,5 +1,29 @@
+# Python/Virtual Env
 venv/
-outputs/*
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+*.egg
+
+# MacOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+*.log
+
+# Outputs and Temp
+outputs/*
+inputs/*.bak  # Backups if editing inputs
+*.tmp
+*.swp
+
+# Other
+.idea/  # If using PyCharm/VS Code
+.vscode/
