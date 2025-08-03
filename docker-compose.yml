@@ -1,7 +1,7 @@
 services:
   crewai-env:
     build: .
-    container_name: sbir-crewai
+    container_name: sbir-crewai-templatenumber
     volumes:
       - .:/app
     stdin_open: true
