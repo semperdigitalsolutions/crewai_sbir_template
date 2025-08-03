@@ -64,7 +64,7 @@ def run_sbir_crew(sbir_input: str):
     handoff_content += "- Commercial Potential -> Volume 2: Commercialization Strategy\n"
     handoff_content += "- Research from synthesis_task -> Volume 2: Related Work\n\n"
     handoff_content += f"## Draft Sections:\n{doc_task.output.raw}\n\n"
-    handoff_content += f"## Ideas and Ranks:\n{ideation_task.output.raw[:1000]}...\n"  # Truncate for preview
+    handoff_content += f"## Ideas and Ranks:\n{ideation_task.output.raw}\n"
     handoff_content += f"## Compliance Notes:\n{compliance_check_task.output.raw}\n"
     with open('outputs/writer_handoff.md', 'w') as f:
         f.write(handoff_content)
@@ -72,8 +72,8 @@ def run_sbir_crew(sbir_input: str):
     
     # Compile post_win_approach_overview.md
     post_win_content = f"# Post-Win Approach Overview for {sbir_input[:50]}\n\n"
-    post_win_content += "## High-Level Plan:\n" + ideation_task.output.raw[:500] + "...\n\n"
-    post_win_content += "## Risks & Mitigations:\n" + eval_ideas_task.output.raw[:500] + "...\n\n"
+    post_win_content += "## High-Level Plan:\n" + ideation_task.output.raw + "\n\n"
+    post_win_content += "## Risks & Mitigations:\n" + eval_ideas_task.output.raw + "\n\n"
     post_win_content += "## Resource Needs:\nFrom doc_task (e.g., labor, facilities).\n\n"
     post_win_content += "## Discussion Points:\n- Bandwidth for tasks?\n- IP concerns?\n- Phase II paths?\n"
     with open('outputs/post_win_approach_overview.md', 'w') as f:

@@ -63,7 +63,7 @@ ideation_task = Task(
         "Rank by feasibility/novelty/impact, outline experiments (e.g., with synthetic data, 6-9 month scoping), risks/mitigations, and align with SBIR goals like dual-use and DoD compliance. "
         "Use tools if needed for tech trends. Limit to 800-1200 words."
     ),
-    expected_output="A Markdown list of 3-5 ideas with rankings, outlines (including experiments/risks), and SBIR alignment.",
+    expected_output="Output full, untruncated content. A Markdown list of 3-5 ideas with rankings, outlines (including experiments/risks), and SBIR alignment.",
     context=[synthesis_task, eval_research_task],  # Builds on the consensus report
     agent=ideator,
 )
