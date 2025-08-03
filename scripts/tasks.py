@@ -82,23 +82,36 @@ eval_ideas_task = Task(
 # Task 6: Draft Documentation
 doc_task = Task(
     description=(
-        "Draft SBIR Phase 1 proposal sections based on the ideation output and evaluation. "
-        "Choose the best idea (highest-scored), and draft the abstract (under 3,000 characters), technical approach (with milestones/risks), and budget/commercial plan (with justifications and dual-use strategy). "
-        "Align with DoD templates; keep concise, limited to 2000-3000 words total."
+        "Draft SBIR Phase 1 proposal sections based on the ideation output, evaluation, and DoD template structure. "
+        "Choose the best idea (highest-scored), and draft: Volume 1 (Cover Sheet with abstract <3000 chars, benefits); "
+        "Volume 2 (Technical Volume: Problem Identification, Objectives, SOW with tasks/milestones/deliverables, Related Work, Future R&D Relationship, Commercialization Strategy, Key Personnel, Foreign Citizens table, Facilities/Equipment, Subcontractors); "
+        "Volume 3 (Cost Volume: Justified budget, travel, labor hours); Volume 4-7 (placeholders for CCR, Supporting Docs, FWA Training, Foreign Affiliations). "
+        "Align with Phase 1 constraints (3 months, $75K max) and include dual-use strategy. Keep concise."
     ),
-    expected_output="A Markdown proposal draft with sections: Abstract, Technical Approach, Budget Justification, Commercial Potential.",
+    expected_output="A Markdown proposal draft with sections labeled by Volume (e.g., ## Volume 1: Cover Sheet), including placeholders for non-draftable items like forms.",
     context=[ideation_task, eval_ideas_task],  # Depends on the generated ideas
     agent=documenter,
+)
+
+# New Task: Compliance Check (add after doc_task; use evaluator)
+compliance_check_task = Task(
+    description=(
+        "Review the proposal draft for compliance with SBIR template elements (e.g., foreign citizens disclosure, data rights assertions, joint venture eligibility, ITAR/EAR restrictions). "
+        "Flag issues, suggest fixes (e.g., insert table for assertions), and ensure alignment with DSIP requirements like Q&A deadlines."
+    ),
+    expected_output="A Markdown compliance report with sections: Flagged Issues, Suggested Fixes, Overall Compliance Score (1-10). Limit to 300-500 words.",
+    context=[doc_task],
+    agent=evaluator,
 )
 
 # Task 7: Final Evaluation
 final_eval_task = Task(
     description=(
         "Perform a final critique of the full proposal draft for overall quality, SBIR readiness, and criteria like accuracy, innovation, feasibility, commercialization. "
-        "Score 1-10 overall and per criterion, suggest last fixes (e.g., budget inconsistencies, template alignment). "
-        "Reference 2025 DoD guidelines."
+        "Score 1-10 overall and per criterion, suggest last fixes (e.g., budget inconsistencies, template alignment with volumes like SOW or data rights). "
+        "Reference 2025 DoD guidelines and the provided template structure."
     ),
     expected_output="A Markdown final critique with sections: Scores (by Criterion), Overall Score, Last Fixes. Limit to 500-800 words.",
-    context=[doc_task],
+    context=[doc_task, compliance_check_task],
     agent=evaluator,
 )

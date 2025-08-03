@@ -2,7 +2,7 @@ from crewai import Agent
 from crewai.llm import LLM
 import os  # For env var
 
-# from crewai_tools import SerperDevTool  # Commented for now; revisit later
+from crewai_tools import SerperDevTool  # Uncommented and assuming it's installed; for web_search
 
 # Possible Models
 # x-ai/grok-4
@@ -44,8 +44,8 @@ researcher = Agent(
         "Use tools like web_search or browse_page for up-to-date info on DSIP/BAAs. Output a structured report with sections: Overview, Key Requirements, Prior Art, Feasibility Gaps, including citations and limited to 800-1200 words."
     ),
     llm=kimi_k2_llm,  # Keep for reasoning/tool use
+    # tools=[SerperDevTool()],  # Enabled for web_search
     tools=[],
-    # tools=[web_search, browse_page],  # Enable for real-time sources
     verbose=True,
     allow_delegation=False,
 )
@@ -59,8 +59,8 @@ evaluator = Agent(
         "and provide overall score. If overall <8, note Phase 1-specific revisions needed, referencing DoD templates."
     ),
     llm=gemini_2_5_flash_llm,  # Keep for evaluation strength
+    # tools=[SerperDevTool()],  # Enabled for verifying facts
     tools=[],
-    # tools=[web_search],  # Optional for verifying facts
     verbose=True,
     allow_delegation=False,
 )
@@ -74,8 +74,8 @@ ideator = Agent(
         "and outline experiments with risks/mitigations. Ensure alignment with solicitation goals and 2025 DoD priorities; limit to 800-1200 words."
     ),
     llm=kimi_k2_llm,  # Keep for innovation
+    # tools=[SerperDevTool()],  # Enabled for trends/inspiration
     tools=[],
-    # tools=[web_search, x_keyword_search],  # For trends/inspiration
     verbose=True,
     allow_delegation=False,
 )
@@ -89,8 +89,8 @@ secondary_researcher = Agent(
         "Provide a second, independent analysis to ensure comprehensive coverage, including citations; limit to 600-900 words."
     ),
     llm=deepseek_llm,  # Keep for different viewpoint
+    # tools=[SerperDevTool()],  # Enabled for fresh sources
     tools=[],
-    # tools=[web_search, browse_page],  # Enable for fresh sources
     verbose=True,
     allow_delegation=False,
 )
@@ -104,8 +104,8 @@ consensus_agent = Agent(
         "and produce a unified report with citations; limit to 1000-1500 words."
     ),
     llm=gemini_2_5_flash_llm,  # Keep for synthesis
+    # tools=[SerperDevTool()],  # Enabled for resolving conflicts
     tools=[],
-    # tools=[web_search],  # For resolving conflicts
     verbose=True,
     allow_delegation=False,
 )
@@ -113,14 +113,15 @@ consensus_agent = Agent(
 # Agent 5: Documenter
 documenter = Agent(
     role="SBIR Documenter",
-    goal="Draft Phase 1 proposal sections like abstract, technical plan, and budget justification.",
+    goal="Draft comprehensive Phase 1 proposal sections aligned with DoD SBIR templates, including all required volumes.",
     backstory=(
-        "You are a professional SBIR writer. Use 2025 DoD templates (e.g., 10-15 page equiv.), draft abstract (<3000 chars), approach (with milestones), budget (justified rates), and commercial potential (dual-use). "
-        "Output in Markdown; limit to 2000-3000 words."
+        "You are a professional SBIR writer specializing in DoD/USAF proposals. Use the 2025 DoD template structure (e.g., Volume 1: Cover Sheet with abstract/benefits; Volume 2: Technical Volume with SOW, related work; Volume 3: Cost Volume; etc.). "
+        "Draft sections based on ideation/evaluation, ensuring compliance with elements like foreign nationals, data rights, and DSIP requirements. Include placeholders for certifications/supporting docs. "
+        "Output in Markdown with clear volume/section headings; limit to 3000-5000 words total."
     ),
     llm=gemini_2_5_flash_llm,  # Swap for better drafting
+    # tools=[SerperDevTool()],  # Enabled for market data
     tools=[],
-    # tools=[web_search],  # For market data
     verbose=True,
     allow_delegation=False,
 )
