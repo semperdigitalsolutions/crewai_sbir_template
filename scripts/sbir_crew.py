@@ -2,13 +2,13 @@ from crewai import Crew, Process
 import re  # For simple score parsing
 import os  # For file path handling
 
-from agents import researcher, evaluator, ideator, synthesizer, documenter  # From agents.py
-from tasks import research_task, eval_research_task, ideation_task, eval_ideas_task, synthesis_task, doc_task, final_eval_task  # From tasks.py
+from agents import researcher, secondary_researcher, evaluator, ideator, consensus_agent, documenter  # From agents.py
+from tasks import research_task, secondary_research_task, synthesis_task, eval_research_task, ideation_task, eval_ideas_task, doc_task, final_eval_task  # From tasks.py
 
-# Assemble the Crew
+# Assemble the Crew with the new parallel research and consensus process
 sbir_crew = Crew(
-    agents=[researcher, evaluator, ideator, synthesizer, documenter],
-    tasks=[research_task, eval_research_task, ideation_task, eval_ideas_task, synthesis_task, doc_task, final_eval_task],
+    agents=[researcher, secondary_researcher, consensus_agent, evaluator, ideator, documenter],
+    tasks=[research_task, secondary_research_task, synthesis_task, eval_research_task, ideation_task, eval_ideas_task, doc_task, final_eval_task],
     process=Process.sequential,  # Runs tasks in order
     verbose=True,  # Detailed logging for debugging
     memory=False  # Enables shared memory for better context retention

@@ -1,80 +1,104 @@
 from crewai import Task
-from agents import researcher, evaluator, ideator, synthesizer, documenter  # Import from agents.py
+from agents import (
+    researcher,
+    secondary_researcher,
+    evaluator,
+    ideator,
+    consensus_agent,
+    documenter,
+)
 
 # Task 1: Research the SBIR Topic
 research_task = Task(
     description=(
         "Research the provided SBIR topic: {sbir_topic}. "
-        "Analyze the solicitation, key requirements, prior art, and feasibility. "
-        "Use tools if needed. Output a structured report in Markdown."
+        "Analyze the 2025 solicitation via official sources (use web_search or browse_page for DSIP/BAAs). Focus on key requirements (e.g., eligibility, work minimums), prior art (including DoD-funded projects), and Phase 1 feasibility (e.g., unclassified studies, risks). "
+        "Use tools for accurate, current info. Output a structured report in Markdown, limited to 800-1200 words."
     ),
-    expected_output='A Markdown report with sections: Overview, Requirements, Prior Art, Feasibility.',
-    agent=researcher
+    expected_output="A Markdown report with sections: Overview (Problem Significance), Requirements (Eligibility and Key Criteria), Prior Art (Related Work), Feasibility (Gaps and Risks). Include citations from tools.",
+    agent=researcher,
 )
 
-# Task 2: Evaluate the Research
-eval_research_task = Task(
+# Task 1b: Secondary Research Task
+secondary_research_task = Task(
     description=(
-        "Critique the research report for accuracy, completeness, bias, and SBIR fit. "
-        "Score each on 1-10, provide overall score, and suggest improvements. "
-        "If overall <8, note revisions needed."
+        "Perform a second, independent research pass on the same SBIR topic: {sbir_topic}, building on the initial report. "
+        "Focus on missed details (e.g., 2025 DoD updates, dual-use potential) or alternative perspectives (e.g., industry vs. DoD views). "
+        "Use tools like web_search for fresh sources. Output a structured report in Markdown, limited to 600-900 words."
     ),
-    expected_output='A critique report with scores and suggestions in Markdown.',
-    context=[research_task],  # Depends on research_task output
-    agent=evaluator
+    expected_output="A complementary Markdown report with sections: Overview (Alternative Angles), Requirements (Additional Criteria), Prior Art (Overlooked Work), Feasibility (New Gaps/Risks). Include citations.",
+    context=[research_task],  # Add this for reference without copying
+    agent=secondary_researcher,
 )
 
-# Task 3: Ideate Solutions
-ideation_task = Task(
-    description=(
-        "Based on the research report and evaluation, brainstorm 3-5 innovative Phase 1 solutions. "
-        "Rank by feasibility/novelty, outline experiments, and align with SBIR goals."
-    ),
-    expected_output='A list of 3-5 ideas with rankings and outlines in Markdown.',
-    context=[research_task, eval_research_task],  # Builds on prior
-    agent=ideator
-)
-
-# Task 4: Evaluate the Ideas
-eval_ideas_task = Task(
-    description=(
-        "Critique the ideation output for innovation, feasibility, and compliance. "
-        "Score each idea 1-10, suggest refinements."
-    ),
-    expected_output='Critique with scores and refinements in Markdown.',
-    context=[ideation_task],
-    agent=evaluator
-)
-
-# Task 5: Synthesize the Best Solution
+# Task 2: Create Consensus from Research
 synthesis_task = Task(
     description=(
-        "Combine research, evaluations, and top ideas into a cohesive Phase 1 solution outline. "
-        "Resolve conflicts and prioritize based on feedback."
+        "Take the two research reports and merge them into a single, cohesive, and superior summary. "
+        "Identify the most critical points from each (e.g., key requirements, prior art gaps), resolve discrepancies using SBIR priorities like feasibility and compliance. "
+        "Incorporate 2025 DoD updates and tool-cited sources. Produce a unified, comprehensive report limited to 1000-1500 words. "
+        "This will be the single source of truth for all subsequent tasks."
     ),
-    expected_output='A unified solution outline in Markdown.',
-    context=[research_task, eval_research_task, ideation_task, eval_ideas_task],
-    agent=synthesizer
+    expected_output="A single, unified Markdown report with sections: Overview, Requirements, Prior Art, Feasibility, Resolved Discrepancies. Include citations.",
+    context=[research_task, secondary_research_task],
+    agent=consensus_agent,
+)
+
+# Task 3: Evaluate the Consolidated Research
+eval_research_task = Task(
+    description=(
+        "Critique the consolidated research report for accuracy, completeness, bias, SBIR fit, innovation, and commercialization potential. "
+        "Score each on 1-10, provide overall score, and suggest targeted improvements (e.g., for Phase 1 feasibility). "
+        "If overall <8, note specific revisions needed, prioritizing DoD compliance."
+    ),
+    expected_output="A critique report in Markdown with sections: Scores (by Criterion), Overall Score, Suggestions. Limit to 400-600 words.",
+    context=[synthesis_task],  # Depends on the new consensus report
+    agent=evaluator,
+)
+
+# Task 4: Ideate Solutions
+ideation_task = Task(
+    description=(
+        "Based on the consolidated research report and its evaluation, brainstorm 3-5 innovative Phase 1 solutions. "
+        "Rank by feasibility/novelty/impact, outline experiments (e.g., with synthetic data, 6-9 month scoping), risks/mitigations, and align with SBIR goals like dual-use and DoD compliance. "
+        "Use tools if needed for tech trends. Limit to 800-1200 words."
+    ),
+    expected_output="A Markdown list of 3-5 ideas with rankings, outlines (including experiments/risks), and SBIR alignment.",
+    context=[synthesis_task, eval_research_task],  # Builds on the consensus report
+    agent=ideator,
+)
+
+# Task 5: Evaluate the Ideas
+eval_ideas_task = Task(
+    description=(
+        "Critique the ideation output for innovation, feasibility, compliance, and commercialization. "
+        "Score each idea 1-10 across criteria, suggest refinements (e.g., Phase 1 scoping adjustments), and note if revisions are needed for SBIR fit."
+    ),
+    expected_output="A Markdown critique with sections: Idea Scores (by Criterion), Refinements. Limit to 300-500 words per idea.",
+    context=[ideation_task],
+    agent=evaluator,
 )
 
 # Task 6: Draft Documentation
 doc_task = Task(
     description=(
-        "Draft SBIR Phase 1 proposal sections based on the synthesized outline. "
-        "Include abstract, technical approach, and basic budget/commercial plan. Keep concise."
+        "Draft SBIR Phase 1 proposal sections based on the ideation output and evaluation. "
+        "Choose the best idea (highest-scored), and draft the abstract (under 3,000 characters), technical approach (with milestones/risks), and budget/commercial plan (with justifications and dual-use strategy). "
+        "Align with DoD templates; keep concise, limited to 2000-3000 words total."
     ),
-    expected_output='Proposal draft in Markdown with sections.',
-    context=[synthesis_task],
-    agent=documenter
+    expected_output="A Markdown proposal draft with sections: Abstract, Technical Approach, Budget Justification, Commercial Potential.",
+    context=[ideation_task, eval_ideas_task],  # Depends on the generated ideas
+    agent=documenter,
 )
 
 # Task 7: Final Evaluation
 final_eval_task = Task(
     description=(
-        "Perform a final critique of the full output for overall quality and SBIR readiness. "
-        "Score 1-10 and suggest any last fixes."
+        "Perform a final critique of the full proposal draft for overall quality, SBIR readiness, and criteria like accuracy, innovation, feasibility, commercialization. "
+        "Score 1-10 overall and per criterion, suggest last fixes (e.g., budget inconsistencies, template alignment). "
+        "Reference 2025 DoD guidelines."
     ),
-    expected_output='Final critique and score in Markdown.',
+    expected_output="A Markdown final critique with sections: Scores (by Criterion), Overall Score, Last Fixes. Limit to 500-800 words.",
     context=[doc_task],
-    agent=evaluator
+    agent=evaluator,
 )
