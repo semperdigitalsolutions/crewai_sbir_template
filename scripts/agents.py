@@ -35,6 +35,34 @@ gemini_2_5_flash_llm = LLM(
     custom_llm_provider="openrouter",
 )
 
+grok_4_llm = LLM(
+    model="x-ai/grok-4",  # Reasoning for research/evaluation
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    custom_llm_provider="openrouter",
+)
+
+claude_opus_4_llm = LLM(
+    model="anthropic/claude-opus-4",  # Reasoning for research/evaluation
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    custom_llm_provider="openrouter",
+)
+
+gemini_2_5_pro_llm = LLM(
+    model="google/gemini-2.5-pro",  # Reasoning for research/evaluation
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    custom_llm_provider="openrouter",
+)
+
+claude_sonnet_4_llm = LLM(
+    model="anthropic/claude-sonnet-4",  # Reasoning for research/evaluation
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY"),
+    custom_llm_provider="openrouter",
+)
+
 # Agent 1: Researcher
 researcher = Agent(
     role="SBIR Researcher",
@@ -43,8 +71,7 @@ researcher = Agent(
         "You are an expert in SBIR research, skilled at analyzing 2025 solicitations and identifying key requirements (e.g., eligibility, data rights). "
         "Use tools like web_search or browse_page for up-to-date info on DSIP/BAAs. Output a structured report with sections: Overview, Key Requirements, Prior Art, Feasibility Gaps, including citations and limited to 800-1200 words."
     ),
-    llm=kimi_k2_llm,  # Keep for reasoning/tool use
-    # tools=[SerperDevTool()],  # Enabled for web_search
+    llm=grok_4_llm,  # Assigned Grok-4 for strong reasoning and tool integration in primary research
     tools=[],
     verbose=True,
     allow_delegation=False,
@@ -58,8 +85,7 @@ evaluator = Agent(
         "You are a rigorous evaluator with SBIR expertise. Score each criterion (accuracy, completeness, innovation, feasibility, commercialization) "
         "and provide overall score. If overall <8, note Phase 1-specific revisions needed, referencing DoD templates."
     ),
-    llm=gemini_2_5_flash_llm,  # Keep for evaluation strength
-    # tools=[SerperDevTool()],  # Enabled for verifying facts
+    llm=claude_opus_4_llm,  # Assigned Claude-Opus-4 for rigorous, detailed critique and analysis
     tools=[],
     verbose=True,
     allow_delegation=False,
@@ -73,8 +99,7 @@ ideator = Agent(
         "You are a creative innovator specializing in SBIR Phase 1 ideas. Generate 3-5 concepts, rank them by feasibility, novelty, and dual-use impact, "
         "and outline experiments with risks/mitigations. Ensure alignment with solicitation goals and 2025 DoD priorities; limit to 800-1200 words."
     ),
-    llm=kimi_k2_llm,  # Keep for innovation
-    # tools=[SerperDevTool()],  # Enabled for trends/inspiration
+    llm=grok_4_llm,  # Assigned Grok-4 for creative brainstorming and innovative concept generation
     tools=[],
     verbose=True,
     allow_delegation=False,
@@ -88,8 +113,7 @@ secondary_researcher = Agent(
         "You are an expert in SBIR research with a knack for finding information others might miss, like 2025 updates or dual-use angles. "
         "Provide a second, independent analysis to ensure comprehensive coverage, including citations; limit to 600-900 words."
     ),
-    llm=deepseek_llm,  # Keep for different viewpoint
-    # tools=[SerperDevTool()],  # Enabled for fresh sources
+    llm=gemini_2_5_pro_llm,  # Assigned Gemini-2.5-Pro for long-context handling and diverse viewpoints in secondary research
     tools=[],
     verbose=True,
     allow_delegation=False,
@@ -103,8 +127,7 @@ consensus_agent = Agent(
         "You specialize in synthesizing diverse information. Take reports from researchers, identify critical points, resolve discrepancies with SBIR focus (e.g., Phase 1 feasibility), "
         "and produce a unified report with citations; limit to 1000-1500 words."
     ),
-    llm=gemini_2_5_flash_llm,  # Keep for synthesis
-    # tools=[SerperDevTool()],  # Enabled for resolving conflicts
+    llm=claude_opus_4_llm,  # Assigned Claude-Opus-4 for superior synthesis and cohesive merging of reports
     tools=[],
     verbose=True,
     allow_delegation=False,
@@ -119,8 +142,7 @@ documenter = Agent(
         "Draft sections based on ideation/evaluation, ensuring compliance with elements like foreign nationals, data rights, and DSIP requirements. Include placeholders for certifications/supporting docs. "
         "Output in Markdown with clear volume/section headings; limit to 3000-5000 words total."
     ),
-    llm=gemini_2_5_flash_llm,  # Swap for better drafting
-    # tools=[SerperDevTool()],  # Enabled for market data
+    llm=gemini_2_5_pro_llm,  # Assigned Gemini-2.5-Pro for detailed drafting and long-context structured outputs
     tools=[],
     verbose=True,
     allow_delegation=False,
