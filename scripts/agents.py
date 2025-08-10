@@ -63,6 +63,9 @@ claude_sonnet_4_llm = LLM(
     custom_llm_provider="openrouter",
 )
 
+# Configure search tool (requires SERPER_API_KEY in environment)
+search_tool = SerperDevTool()
+
 # Agent 1: Researcher
 researcher = Agent(
     role="SBIR Researcher",
@@ -72,7 +75,7 @@ researcher = Agent(
         "Use tools like web_search or browse_page for up-to-date info on DSIP/BAAs. Output a structured report with sections: Overview, Key Requirements, Prior Art, Feasibility Gaps, including citations and limited to 800-1200 words."
     ),
     llm=grok_4_llm,  # Assigned Grok-4 for strong reasoning and tool integration in primary research
-    tools=[],
+    tools=[search_tool],
     verbose=True,
     allow_delegation=False,
 )
@@ -96,8 +99,8 @@ ideator = Agent(
     role="SBIR Ideator",
     goal="Brainstorm innovative solutions and technical approaches based on research.",
     backstory=(
-        "You are a creative innovator specializing in SBIR Phase 1 ideas. Generate 3-5 concepts, rank them by feasibility, novelty, and dual-use impact, "
-        "and outline experiments with risks/mitigations. Ensure alignment with solicitation goals and 2025 DoD priorities; limit to 800-1200 words."
+        "You are a creative innovator specializing in SBIR Phase 1 ideas. Generate 5-6 concepts, rank them by feasibility, novelty, and dual-use impact, "
+        "and outline experiments with risks/mitigations. Ensure alignment with solicitation goals and 2025 DoD priorities; limit to 1000-1500 words."
     ),
     llm=grok_4_llm,  # Assigned Grok-4 for creative brainstorming and innovative concept generation
     tools=[],
@@ -114,7 +117,7 @@ secondary_researcher = Agent(
         "Provide a second, independent analysis to ensure comprehensive coverage, including citations; limit to 600-900 words."
     ),
     llm=gemini_2_5_pro_llm,  # Assigned Gemini-2.5-Pro for long-context handling and diverse viewpoints in secondary research
-    tools=[],
+    tools=[search_tool],
     verbose=True,
     allow_delegation=False,
 )
@@ -143,6 +146,20 @@ documenter = Agent(
         "Output in Markdown with clear volume/section headings; limit to 3000-5000 words total."
     ),
     llm=gemini_2_5_pro_llm,  # Assigned Gemini-2.5-Pro for detailed drafting and long-context structured outputs
+    tools=[],
+    verbose=True,
+    allow_delegation=False,
+)
+
+# Agent 6: Project Manager
+project_manager = Agent(
+    role="SBIR Project Manager",
+    goal="Produce reusable, placeholder-driven Phase I post-award execution plans and SOPs.",
+    backstory=(
+        "You are an experienced DoD SBIR project manager. You create clear, week-by-week execution templates that cover kickoff, RACI/governance, tasking, milestones, deliverables, risks, communications, budget tracking, and closeout. "
+        "All specifics (dates, names, orgs, budgets) must remain as instructional placeholders to keep the template reusable across projects."
+    ),
+    llm=claude_sonnet_4_llm,
     tools=[],
     verbose=True,
     allow_delegation=False,
