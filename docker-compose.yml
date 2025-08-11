@@ -10,3 +10,4 @@ services:
       - .env  # Or .env.local
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - SERPER_API_KEY=${SERPER_API_KEY}
