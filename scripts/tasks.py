@@ -13,7 +13,7 @@ from agents import (
 research_task = Task(
     description=(
         "Research the provided SBIR topic: {sbir_topic}. "
-        "Use your web search tool to locate the LIVE DoD/DSIP solicitation page for this topic and any published amendments/updates based on the Topic Number (if present). "
+        "Use your web search or scrape tool to locate and analyze the LIVE DoD/DSIP solicitation page for this topic and any published amendments/updates based on the Topic Number (if present). "
         "Verify dates (release, open, close), eligibility, work percentage minimums, ITAR/EAR restrictions, and template/volume requirements from official sources. "
         "Corroborate with SBIR.gov and Service-specific portals (e.g., afsbirsttr.us) as secondary references. "
         "Focus on key requirements (e.g., eligibility, work minimums), prior art (including DoD-funded projects), and Phase 1 feasibility (unclassified studies, risks). "
@@ -31,7 +31,7 @@ secondary_research_task = Task(
     description=(
         "Perform a second, independent research pass on the same SBIR topic: {sbir_topic}, building on the initial report. "
         "Focus on missed details (e.g., 2025 DoD updates, dual-use potential) or alternative perspectives (e.g., industry vs. DoD views). "
-        "Use tools like web_search for fresh sources. Output a structured report in Markdown, limited to 600-900 words."
+        "Use your web search or scrape tool for fresh sources. Output a structured report in Markdown, limited to 600-900 words."
     ),
     expected_output="A complementary Markdown report with sections: Overview (Alternative Angles), Requirements (Additional Criteria), Prior Art (Overlooked Work), Feasibility (New Gaps/Risks). Include citations.",
     context=[research_task],  # Add this for reference without copying
@@ -68,6 +68,7 @@ ideation_task = Task(
     description=(
         "Based on the consolidated research report and its evaluation, brainstorm 5-6 innovative Phase 1 solutions. "
         "Rank by feasibility/novelty/impact, outline experiments (e.g., with synthetic data, 6-9 month scoping), risks/mitigations, and align with SBIR goals like dual-use and DoD compliance. "
+        "Quantify risks numerically (1-5 scale) and include specific, measurable metrics in the proposed experiments. "
         "Use tools if needed for tech trends. Limit to 1000-1500 words."
     ),
     expected_output="Output full, untruncated content. A Markdown list of 5-6 ideas with rankings, outlines (including experiments/risks), and SBIR alignment.",
@@ -93,7 +94,9 @@ doc_task = Task(
         "Choose the best idea (highest-scored), and draft: Volume 1 (Cover Sheet with abstract <3000 chars, benefits); "
         "Volume 2 (Technical Volume: Problem Identification, Objectives, SOW with tasks/milestones/deliverables, Related Work, Future R&D Relationship, Commercialization Strategy, Key Personnel, Foreign Citizens table, Facilities/Equipment, Subcontractors); "
         "Volume 3 (Cost Volume: Justified budget, travel, labor hours); Volume 4-7 (placeholders for CCR, Supporting Docs, FWA Training, Foreign Affiliations). "
-        "Align with Phase 1 constraints (3 months, $75K max) and include dual-use strategy. Keep concise."
+        "Align with Phase 1 constraints (6 months, $150K max) and include dual-use strategy. Keep concise."
+        " Within Volume 2, include sample tables for Data Rights (DFARS) and ITAR/EAR compliance."
+        " In the Commercialization Strategy section, add a competitive landscape analysis and potential pricing strategies."
         " Instructional Placeholder Rule: When you must include company-specific information (like personnel bios, past projects, or cost figures), you are forbidden from inventing details. Instead, you MUST generate a descriptive, instructional placeholder in brackets. This placeholder should explain what information is needed and why it's important."
         " Examples: "
         " • Instead of inventing a PI name, write: [INSERT Principal Investigator Name and a 3-4 sentence bio. The bio MUST highlight experience directly relevant to AI, simulation, or government contracting to build credibility.] "

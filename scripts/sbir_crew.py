@@ -1,9 +1,40 @@
 from crewai import Crew, Process
+import argparse  # For CLI argument parsing
 import re  # For simple score parsing
 import os  # For file path handling
 
 from agents import researcher, secondary_researcher, evaluator, ideator, consensus_agent, documenter, project_manager  # From agents.py
 from tasks import research_task, secondary_research_task, synthesis_task, eval_research_task, ideation_task, eval_ideas_task, doc_task, compliance_check_task, final_eval_task, generate_project_plan_task, evaluate_project_plan_task, revise_project_plan_task  # From tasks.py
+
+# --- Utility functions (exported for unit tests) ---
+def parse_overall_score(text: str):
+    """Parse 'Overall Score: X/10' from text where X may be int or decimal. Returns float or None."""
+    m = re.search(r"Overall Score:\s*(\d+(?:\.\d+)?)/10", text)
+    return float(m.group(1)) if m else None
+
+def split_multi_idea_blocks(draft_text: str):
+    """Split a multi-idea draft into blocks with titles and per-volume sections.
+
+    Returns a list of dicts: [{ 'title': str, 'volumes': [str, ...] }]
+    """
+    if '### IDEA:' not in draft_text:
+        return []
+    lines = draft_text.splitlines()
+    idea_indices = [i for i, line in enumerate(lines) if line.strip().startswith('### IDEA:')]
+    idea_indices.append(len(lines))
+    blocks = []
+    for idx, start in enumerate(idea_indices[:-1]):
+        end = idea_indices[idx + 1]
+        idea_block_lines = lines[start:end]
+        if not idea_block_lines:
+            continue
+        title_line = idea_block_lines[0]
+        title = title_line.replace('### IDEA:', '').strip()
+        block_text = '\n'.join(idea_block_lines)
+        volume_chunks = block_text.split('## Volume ')
+        volumes = ['## Volume ' + v for v in volume_chunks[1:]]
+        blocks.append({'title': title, 'volumes': volumes})
+    return blocks
 
 # Assemble the Crew with the new parallel research and consensus process
 sbir_crew = Crew(
@@ -55,9 +86,12 @@ def run_sbir_crew(sbir_input: str):
         task_output = task.output.raw
         default_name = task.description.replace(' ', '_').lower()[:50] + ".md"
         file_name = f"outputs/{task_labels.get(task, default_name)}"
-        with open(file_name, 'w') as f:
-            f.write(task_output)
-        print(f"Saved task output to {file_name}")
+        try:
+            with open(file_name, 'w') as f:
+                f.write(task_output)
+            print(f"Saved task output to {file_name}")
+        except OSError as e:
+            print(f"Error saving {file_name}: {e}")
         
         if task == doc_task:  # Handle draft(s) volume splitting and per-idea organization
             # Detect multi-idea drafts using '### IDEA:' section headers
@@ -78,30 +112,42 @@ def run_sbir_crew(sbir_input: str):
                     os.makedirs(idea_dir, exist_ok=True)
                     # Save full draft for this idea
                     idea_full_path = os.path.join(idea_dir, 'proposal_draft_sections.md')
-                    with open(idea_full_path, 'w') as f:
-                        f.write('\n'.join(idea_block_lines))
-                    print(f"Saved {idea_full_path} for '{idea_title}'")
+                    try:
+                        with open(idea_full_path, 'w') as f:
+                            f.write('\n'.join(idea_block_lines))
+                        print(f"Saved {idea_full_path} for '{idea_title}'")
+                    except OSError as e:
+                        print(f"Error saving {idea_full_path}: {e}")
                     # Split per-volume within this idea block
                     idea_block_text = '\n'.join(idea_block_lines)
                     volumes = idea_block_text.split('## Volume ')
                     for vi, vol in enumerate(volumes[1:], 1):  # Skip preface chunk
                         vol_file = os.path.join(idea_dir, f'volume_{vi}.md')
-                        with open(vol_file, 'w') as f:
-                            f.write('## Volume ' + vol)
-                        print(f"Saved {vol_file} for '{idea_title}'")
+                        try:
+                            with open(vol_file, 'w') as f:
+                                f.write('## Volume ' + vol)
+                            print(f"Saved {vol_file} for '{idea_title}'")
+                        except OSError as e:
+                            print(f"Error saving {vol_file}: {e}")
             else:
                 # Legacy single-idea behavior: split volumes into outputs/volume_*.md
                 volumes = task_output.split('## Volume ')
                 for i, vol in enumerate(volumes[1:], 1):  # Skip first empty split
                     vol_file = f"outputs/volume_{i}.md"
-                    with open(vol_file, 'w') as f:
-                        f.write('## Volume ' + vol)
-                    print(f"Saved {vol_file}")
+                    try:
+                        with open(vol_file, 'w') as f:
+                            f.write('## Volume ' + vol)
+                        print(f"Saved {vol_file}")
+                    except OSError as e:
+                        print(f"Error saving {vol_file}: {e}")
     
     # Save the final result
-    with open('outputs/final_output.md', 'w') as f:
-        f.write(str(result))
-    print("Saved final output to outputs/final_output.md")
+    try:
+        with open('outputs/final_output.md', 'w') as f:
+            f.write(str(result))
+        print("Saved final output to outputs/final_output.md")
+    except OSError as e:
+        print(f"Error saving outputs/final_output.md: {e}")
     
     # Compile writer_handoff.md
     handoff_content = f"# SBIR Writer Handoff for {sbir_input[:50]}\n\n"
@@ -114,9 +160,12 @@ def run_sbir_crew(sbir_input: str):
     handoff_content += f"## Ideas and Ranks:\n{ideation_task.output.raw}\n"
     handoff_content += f"## Compliance Notes:\n{compliance_check_task.output.raw}\n"
     handoff_content += f"## Final Project Plan Template:\n{revise_project_plan_task.output.raw}\n"
-    with open('outputs/writer_handoff.md', 'w') as f:
-        f.write(handoff_content)
-    print("Saved writer_handoff.md")
+    try:
+        with open('outputs/writer_handoff.md', 'w') as f:
+            f.write(handoff_content)
+        print("Saved writer_handoff.md")
+    except OSError as e:
+        print(f"Error saving outputs/writer_handoff.md: {e}")
     
     # Compile post_win_approach_overview.md
     post_win_content = f"# Post-Win Approach Overview for {sbir_input[:50]}\n\n"
@@ -124,29 +173,39 @@ def run_sbir_crew(sbir_input: str):
     post_win_content += "## Risks & Mitigations:\n" + eval_ideas_task.output.raw + "\n\n"
     post_win_content += "## Resource Needs:\nFrom doc_task (e.g., labor, facilities).\n\n"
     post_win_content += "## Discussion Points:\n- Bandwidth for tasks?\n- IP concerns?\n- Phase II paths?\n"
-    with open('outputs/post_win_approach_overview.md', 'w') as f:
-        f.write(post_win_content)
-    print("Saved post_win_approach_overview.md")
+    try:
+        with open('outputs/post_win_approach_overview.md', 'w') as f:
+            f.write(post_win_content)
+        print("Saved post_win_approach_overview.md")
+    except OSError as e:
+        print(f"Error saving outputs/post_win_approach_overview.md: {e}")
     
     # Basic post-processing: Parse evaluator scores from outputs (assumes Markdown with 'Overall Score: X/10')
     eval_outputs = [task.output.raw for task in sbir_crew.tasks if task.agent == evaluator]
     for i, eval_output in enumerate(eval_outputs, 1):
-        score_match = re.search(r'Overall Score:\s*(\d+)/10', eval_output)
-        if score_match:
-            score = int(score_match.group(1))
-            if score < 8:
+        score = parse_overall_score(eval_output)
+        if score is not None:
+            if score < 8.0:
                 print(f"Warning: Low score ({score}/10) detected in eval_output_{i}.md. Consider revisions based on suggestions in output.")
                 # Optional: Add auto-rerun logic here later, e.g., re-kickoff specific tasks
     
     return result
 
 if __name__ == "__main__":
-    # Load the SBIR topic from the input file (for SBIR 12148)
-    input_file = os.path.join('inputs', 'topic.txt')
-    with open(input_file, 'r') as f:
-        topic = f.read().strip()
-    
-    print(f"Running crew with SBIR topic from file: {topic[:100]}...")  # Preview first 100 chars
-    
+    # Flexible CLI input for topic file
+    parser = argparse.ArgumentParser(description="Run the SBIR Crew pipeline")
+    parser.add_argument("--topic", "-t", default=os.path.join('inputs', 'topic.txt'), help="Path to the input topic file")
+    args = parser.parse_args()
+
+    input_file = args.topic
+    try:
+        with open(input_file, 'r') as f:
+            topic = f.read().strip()
+    except OSError as e:
+        print(f"Error reading {input_file}: {e}")
+        topic = ""
+
+    print(f"Running crew with SBIR topic from file: {input_file} :: {topic[:100]}...")  # Preview first 100 chars
+
     final_result = run_sbir_crew(topic)
     print(final_result)

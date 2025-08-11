@@ -2,7 +2,7 @@ from crewai import Agent
 from crewai.llm import LLM
 import os  # For env var
 
-from crewai_tools import SerperDevTool  # Uncommented and assuming it's installed; for web_search
+from crewai_tools import SerperDevTool, ScrapeWebsiteTool  # Uncommented and assuming it's installed; for web_search and scraping
 
 # Possible Models
 # x-ai/grok-4
@@ -14,57 +14,121 @@ from crewai_tools import SerperDevTool  # Uncommented and assuming it's installe
 
 
 # Define LLMs using OpenRouter API (set OPENROUTER_API_KEY in .env)
-deepseek_llm = LLM(
-    model="deepseek/deepseek-chat-v3-0324",  # Reasoning for research/evaluation
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    custom_llm_provider="openrouter",
-)
+try:
+    deepseek_llm = LLM(
+        model="deepseek/deepseek-chat-v3-0324",  # Reasoning for research/evaluation
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
+except Exception as e:
+    print(f"Warning initializing LLM deepseek/deepseek-chat-v3-0324: {e}")
+    deepseek_llm = LLM(
+        model="google/gemini-2.5-flash",
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
 
-kimi_k2_llm = LLM(
-    model="moonshotai/kimi-k2",  # For innovation, reasoning, code (paid upgrade)
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    custom_llm_provider="openrouter",
-)
+try:
+    kimi_k2_llm = LLM(
+        model="moonshotai/kimi-k2",  # For innovation, reasoning, code (paid upgrade)
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
+except Exception as e:
+    print(f"Warning initializing LLM moonshotai/kimi-k2: {e}")
+    kimi_k2_llm = LLM(
+        model="google/gemini-2.5-flash",
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
 
-gemini_2_5_flash_llm = LLM(
-    model="google/gemini-2.5-flash",  # For synthesis, long context
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    custom_llm_provider="openrouter",
-)
+try:
+    gemini_2_5_flash_llm = LLM(
+        model="google/gemini-2.5-flash",  # For synthesis, long context
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
+except Exception as e:
+    print(f"Warning initializing LLM google/gemini-2.5-flash: {e}")
+    gemini_2_5_flash_llm = LLM(
+        model="x-ai/grok-4",
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
 
-grok_4_llm = LLM(
-    model="x-ai/grok-4",  # Reasoning for research/evaluation
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    custom_llm_provider="openrouter",
-)
+try:
+    grok_4_llm = LLM(
+        model="x-ai/grok-4",  # Reasoning for research/evaluation
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
+except Exception as e:
+    print(f"Warning initializing LLM x-ai/grok-4: {e}")
+    grok_4_llm = LLM(
+        model="google/gemini-2.5-flash",
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
 
-claude_opus_4_llm = LLM(
-    model="anthropic/claude-opus-4",  # Reasoning for research/evaluation
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    custom_llm_provider="openrouter",
-)
+try:
+    claude_opus_4_llm = LLM(
+        model="anthropic/claude-opus-4.1",  # Reasoning for research/evaluation
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
+except Exception as e:
+    print(f"Warning initializing LLM anthropic/claude-opus-4.1: {e}")
+    claude_opus_4_llm = LLM(
+        model="google/gemini-2.5-flash",
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
 
-gemini_2_5_pro_llm = LLM(
-    model="google/gemini-2.5-pro",  # Reasoning for research/evaluation
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    custom_llm_provider="openrouter",
-)
+try:
+    gemini_2_5_pro_llm = LLM(
+        model="google/gemini-2.5-pro",  # Reasoning for research/evaluation
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
+except Exception as e:
+    print(f"Warning initializing LLM google/gemini-2.5-pro: {e}")
+    gemini_2_5_pro_llm = LLM(
+        model="google/gemini-2.5-flash",
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
 
-claude_sonnet_4_llm = LLM(
-    model="anthropic/claude-sonnet-4",  # Reasoning for research/evaluation
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    custom_llm_provider="openrouter",
-)
+try:
+    claude_sonnet_4_llm = LLM(
+        model="anthropic/claude-sonnet-4",  # Reasoning for research/evaluation
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
+except Exception as e:
+    print(f"Warning initializing LLM anthropic/claude-sonnet-4: {e}")
+    claude_sonnet_4_llm = LLM(
+        model="google/gemini-2.5-flash",
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        custom_llm_provider="openrouter",
+    )
 
-# Configure search tool (requires SERPER_API_KEY in environment)
+# Configure search and scrape tools (requires SERPER_API_KEY in environment for search)
 search_tool = SerperDevTool()
+scrape_tool = ScrapeWebsiteTool()
 
 # Agent 1: Researcher
 researcher = Agent(
@@ -75,7 +139,7 @@ researcher = Agent(
         "Use tools like web_search or browse_page for up-to-date info on DSIP/BAAs. Output a structured report with sections: Overview, Key Requirements, Prior Art, Feasibility Gaps, including citations and limited to 800-1200 words."
     ),
     llm=grok_4_llm,  # Assigned Grok-4 for strong reasoning and tool integration in primary research
-    tools=[search_tool],
+    tools=[search_tool, scrape_tool],
     verbose=True,
     allow_delegation=False,
 )
@@ -117,7 +181,7 @@ secondary_researcher = Agent(
         "Provide a second, independent analysis to ensure comprehensive coverage, including citations; limit to 600-900 words."
     ),
     llm=gemini_2_5_pro_llm,  # Assigned Gemini-2.5-Pro for long-context handling and diverse viewpoints in secondary research
-    tools=[search_tool],
+    tools=[search_tool, scrape_tool],
     verbose=True,
     allow_delegation=False,
 )
@@ -143,6 +207,7 @@ documenter = Agent(
     backstory=(
         "You are a professional SBIR writer specializing in DoD/USAF proposals. Use the 2025 DoD template structure (e.g., Volume 1: Cover Sheet with abstract/benefits; Volume 2: Technical Volume with SOW, related work; Volume 3: Cost Volume; etc.). "
         "Draft sections based on ideation/evaluation, ensuring compliance with elements like foreign nationals, data rights, and DSIP requirements. Include placeholders for certifications/supporting docs. "
+        "You must include required certifications (e.g., ITAR, FOCI, Section 889) as sample Markdown tables in the proposal draft. "
         "Output in Markdown with clear volume/section headings; limit to 3000-5000 words total."
     ),
     llm=gemini_2_5_pro_llm,  # Assigned Gemini-2.5-Pro for detailed drafting and long-context structured outputs
